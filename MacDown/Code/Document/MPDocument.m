@@ -321,6 +321,23 @@ static void (^MPGetPreviewLoadingCompletionHandler(MPDocument *doc))()
     self.splitView.autosaveName = autosaveName;
 }
 
+- (NSImage *)imageResize:(NSImage*)anImage newSize:(NSSize)newSize {
+    NSImage *sourceImage = anImage;
+    [sourceImage setScalesWhenResized:YES];
+    // Report an error if the source isn't a valid image
+    if (![sourceImage isValid]){
+        NSLog(@"Invalid Image");
+    } else {
+        NSImage *smallImage = [[NSImage alloc] initWithSize: newSize];
+        [smallImage lockFocus];
+        [sourceImage setSize: newSize];
+        [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
+        [sourceImage drawAtPoint:NSZeroPoint fromRect:CGRectMake(0, 0, newSize.width, newSize.height) operation:NSCompositeCopy fraction:1.0];
+        [smallImage unlockFocus];
+        return smallImage;
+    }
+    return nil;
+}
 
 #pragma mark - Override
 
@@ -1056,11 +1073,7 @@ dragDestinationActionMaskForDraggingInfo:(id<NSDraggingInfo>)info
 }
 
 
-
-
-
 #pragma mark - IBAction
-
 
 - (IBAction)pasteFake:(id)sender {
     NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
@@ -1070,21 +1083,14 @@ dragDestinationActionMaskForDraggingInfo:(id<NSDraggingInfo>)info
     if (ok) {
         NSArray *objectsToPaste = [pasteboard readObjectsForClasses:classArray options:options];
         NSImage *image = [objectsToPaste objectAtIndex:0];
-        
         NSSize size = NSMakeSize(image.size.width/2, image.size.height/2);
-        
         image = [self imageResize:image newSize:size];
-        
-        //[imageView setImage:image];
         //transfer image to base64 string
         NSData *dataImage = [[NSData alloc] init];
         dataImage = [image TIFFRepresentationUsingCompression:(NSTIFFCompressionJPEG) factor:0.5f ];
-        
         NSBitmapImageRep *imageRep = [NSBitmapImageRep imageRepWithData:dataImage]; // converting into BitmapImageRep
         NSDictionary *imageProps = [NSDictionary dictionaryWithObject:[NSNumber numberWithFloat:0.5f] forKey:NSImageCompressionFactor]; // any number betwwen 0 to 1
         dataImage = [imageRep representationUsingType:NSJPEGFileType properties:imageProps];
-        
-        
         NSString *encodedImageStr = [dataImage base64Encoding];
         NSString *value = [NSString stringWithFormat:@"![](data:image/jpeg;base64,%@)", encodedImageStr];
         [self.editor insertText:value];
@@ -1100,30 +1106,9 @@ dragDestinationActionMaskForDraggingInfo:(id<NSDraggingInfo>)info
                 value = [NSString stringWithFormat:@"![](%@)", value];
             }
             [self.editor insertText:value];
-            
-            
         }
         
     }
-}
-
-- (NSImage *)imageResize:(NSImage*)anImage newSize:(NSSize)newSize {
-    NSImage *sourceImage = anImage;
-    [sourceImage setScalesWhenResized:YES];
-    
-    // Report an error if the source isn't a valid image
-    if (![sourceImage isValid]){
-        NSLog(@"Invalid Image");
-    } else {
-        NSImage *smallImage = [[NSImage alloc] initWithSize: newSize];
-        [smallImage lockFocus];
-        [sourceImage setSize: newSize];
-        [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
-        [sourceImage drawAtPoint:NSZeroPoint fromRect:CGRectMake(0, 0, newSize.width, newSize.height) operation:NSCompositeCopy fraction:1.0];
-        [smallImage unlockFocus];
-        return smallImage;
-    }
-    return nil;
 }
 
 - (IBAction)copyHtml:(id)sender
