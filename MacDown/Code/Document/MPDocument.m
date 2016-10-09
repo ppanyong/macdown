@@ -171,11 +171,7 @@ NS_INLINE NSColor *MPGetWebViewBackgroundColor(WebView *webview)
 @interface MPDocument ()
 <NSSplitViewDelegate, NSTextViewDelegate,
 #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 101100
-<<<<<<< HEAD
-WebFrameLoadDelegate, WebPolicyDelegate,
-=======
-     WebEditingDelegate, WebFrameLoadDelegate, WebPolicyDelegate,
->>>>>>> MacDownApp/master
+WebEditingDelegate, WebFrameLoadDelegate, WebPolicyDelegate,
 #endif
 MPAutosaving, MPRendererDataSource, MPRendererDelegate>
 
